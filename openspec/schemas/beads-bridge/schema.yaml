@@ -337,5 +337,110 @@ apply:
   requires: [beads]
   tracks: tasks.md
   instruction: |
-    Read context files, work through pending tasks, mark complete as you go.
-    Pause if you hit blockers or need clarification.
+    Apply this change by executing its Beads graph. `tasks.md` is the index a
+    reviewer reads; the beads are the work. Both must agree at every step, and
+    the graph - not the checklist - decides what is ready next.
+
+    ## 0. Preflight
+
+    Run all three before changing anything. If any fails, stop and report it.
+
+    1. Confirm the database belongs to this project: `bd where` must resolve
+       inside this repository. If it resolves elsewhere, stop. A wrong
+       database means beads landing in the wrong project.
+    2. Confirm the plan exists: `beads/plan.json` must be present. If it is
+       missing, the `beads` artifact has not been created yet; create it
+       before applying.
+    3. Check whether this change is already materialized:
+       `bd list --label change:<change-name> --json --all`
+       A non-empty result means the graph already exists. Do NOT run
+       `bd create` in that case: `bd create --graph` is not idempotent and
+       would create a second copy of the whole graph. Skip to the loop.
+
+    ## 1. Materialize once
+
+    Only when step 0.3 found nothing:
+
+    - `bd create --graph beads/plan.json --dry-run` and read the output.
+    - `bd create --graph beads/plan.json --json` creates the entire graph in
+      a single transaction.
+
+    Then record what was created, so the index and the database can be checked
+    against each other later:
+
+    - Append the minted bead id to each task's own line in `tasks.md` as
+      `(bd-xxxx)`, taken from the `ids` map the command returned.
+    - Record the epic's id once as a plain bullet under
+      `## Workflow follow-up` in `tasks.md`, so later steps can find it
+      without a lookup. `bd list --label change:<change-name> --pinned --json`
+      finds it again if that bullet is ever lost.
+    - `openspec validate <change-name>` must still pass.
+
+    ## 2. The loop
+
+    Repeat until no work remains.
+
+    a. Select work: `bd ready --label change:<change-name> --json`
+       This returns an array of issues. Exclude any whose `issue_type` is
+       `epic` - the container is pinned and normally absent, but do not rely on
+       that. If you use `bd ready --mol <epic-id> --json` for a concurrency
+       view instead, note that it returns an object rather than an array and
+       DOES include the container.
+    b. Claim one: `bd update <id> --claim`. Claiming is atomic; if another
+       session claimed it first, take the next.
+    c. Do the work. Take what to build from the task's own text, what the
+       behaviour must be from the spec deltas, and how from design.md.
+    d. Complete it, in this order:
+       `bd close <id> --reason "..."` and only then mark that task's checkbox
+       in `tasks.md`.
+       Closing first is deliberate. An interruption between the two leaves the
+       work closed and the box unticked - visible and recoverable. The reverse
+       would leave a task marked done whose work is not, which is the failure
+       this whole arrangement exists to prevent.
+       Closing a bead also releases whatever it was blocking.
+
+    ## 3. Work that is not in the plan
+
+    Do not quietly extend `tasks.md`. Decide which of these it is, and say so:
+
+    - **Spec-level behaviour unchanged** - a defect, a chore, a gap in the
+      plan: `bd create "<title>" -t bug|chore -p <0-4> --deps
+      discovered-from:<epic-id>`. It belongs to this change's trail but not to
+      its task list. Carry on.
+    - **Needs design decisions this change never made**: stop, and escalate it
+      into its own OpenSpec change rather than absorbing it here.
+    - **A security problem**: stop work, create the bead, and report it. Never
+      continue silently past a security finding.
+
+    ## 4. Resuming
+
+    A session that did not create this graph needs no history to continue:
+
+    - `bd ready --label change:<change-name> --json` lists what can be started
+      now, already excluding anything blocked.
+    - `bd list --label change:<change-name> --json` lists the change's tasks
+      with their status, which is the progress count.
+    - `bd blocked` explains anything waiting.
+    - A bead left `in_progress` by an interrupted session can be released with
+      `bd update <id> --status open` or reclaimed with `bd update <id> --claim`.
+
+    Do not re-read the whole plan to resume. The graph is the state.
+
+    ## 5. Finishing
+
+    - Every tracked task must have its bead closed and its box ticked. A task
+      marked done whose bead is still open is a mismatch: fix it before
+      recording evidence.
+    - Append a short evidence block under `## Workflow follow-up` in
+      `tasks.md`: how many tasks closed, any discovery beads created and
+      whether they are resolved, and anything verification should look at.
+      This section is outside tracked progress, so `openspec status` is
+      unaffected.
+    - `bd note <epic-id> "<summary>"` records the same on the change's epic,
+      where it is queryable later.
+    - Close the epic explicitly: `bd close <epic-id> --force`. It is pinned,
+      so it does not close on its last child, and a pinned issue refuses
+      modification outright rather than merely skipping auto-close. Any
+      warning it raises about open children is a real signal: those tasks are
+      unfinished, and closing over them should be a deliberate act.
+    - Leave verification and archiving to their own steps. Do not archive here.

@@ -127,9 +127,11 @@ A container node with children is an ordinary open issue, so it appears in the r
 
 - the plan sets `pinned: true` on the epic, so unscoped ready queries stay clean;
 - apply selects claimable work by the change's label and excludes the epic explicitly, because `--mol` will not do it;
-- the change's completion step closes the epic itself, because nothing else will.
+- the change's completion step closes the epic itself with `--force`, because nothing else will — and because a pinned issue refuses modification outright, not merely auto-close.
 
-The cost is losing auto-close. That is acceptable: the explicit close was already the change's final step, and stating it is more honest than depending on a side effect of a flag set for a different reason. The `parallel_groups` view remains useful for reporting which work can proceed concurrently.
+The cost is losing auto-close, plus one piece of friction: a pinned issue refuses modification entirely, so the closing command needs `--force`. That is acceptable. The explicit close was already the change's final step, and stating it is more honest than depending on a side effect of a flag set for a different reason.
+
+The alternative — leaving the epic unpinned and relying on the selection rule to exclude it — was rejected. It would put the container back into the very frontier that rule exists to keep clean, so a single filter missed would let an agent claim its own container, which is the failure this is defending against. The `parallel_groups` view remains useful for reporting which work can proceed concurrently.
 
 A further detail the probe surfaced: the two ready queries return different JSON shapes — `bd ready --json` an array of issues, `bd ready --mol --json` an object with `parallel_groups`, `ready_steps`, and a `steps[]` of `{issue, parallel_group, parallel_info}`. The instruction must not assume one shape for both.
 
@@ -151,6 +153,7 @@ Run against Beads 1.3.1 and OpenSpec 1.14.3, in an isolated database and scratch
 | Container epic in the ready frontier | **Present** in both `bd ready` and `bd ready --mol` |
 | `pinned: true` on the epic | Removes it from `bd ready`; does **not** remove it from `bd ready --mol`'s ready steps |
 | Pinned epic after its last child closes | Remains **open** — a pinned root does not auto-close |
+| Closing a pinned epic | **Refused** without `--force`: "cannot modify pinned issue". With `--force` it closes and names any still-open children |
 | Pinned epic in `bd list` | Hidden by default; `--pinned` reveals it, and `bd show <id>` reaches it either way |
 | `bd create --graph` run twice on the same plan | **Creates duplicates.** 37 nodes became 74. Materialization is not idempotent, so the no-duplicate guarantee has to live in the preflight |
 | `bd ready` versus `bd ready --mol` JSON shape | Array of issues versus an object with `parallel_groups`, `ready_steps`, and `steps[]` |

@@ -37,7 +37,7 @@ The plan SHALL contain exactly one epic node representing the change and one nod
 #### Scenario: The epic is closed explicitly
 
 - **WHEN** the final task's bead is closed
-- **THEN** the epic remains open until the change's completion step closes it, because a pinned root does not close when its last child does
+- **THEN** the epic remains open until the change's completion step closes it with an explicit force, because a pinned root neither closes on its last child nor accepts modification by any other means
 
 ### Requirement: Edges encode only real ordering
 
