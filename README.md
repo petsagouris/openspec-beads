@@ -36,11 +36,14 @@ Install the beads-bridge schema for OpenSpec into this project:
 1. Verify this project uses OpenSpec: run `openspec list --json` and check that
    `root` is not null. If it is null, stop and tell me it needs `openspec init` first.
 2. Clone https://github.com/petsagouris/openspec-beads to a temporary directory.
-3. Copy `openspec/schemas/beads-bridge/` from the clone into this project's
-   `openspec/schemas/`.
+3. Create `openspec/schemas/` if it does not exist, then copy
+   `openspec/schemas/beads-bridge/` from the clone into it.
 4. Run `openspec schema validate beads-bridge` and show me the result. If it fails,
    stop and report the error.
 5. Check whether Beads is set up: if there is no `.beads/` directory, run `bd init`.
+   Note that `bd init` also writes integrations for Claude, Codex and Cursor by
+   default. Remove the ones I do not use with `bd setup <agent> --remove`, because
+   the setup commands own those files and hand-editing them is what breaks later.
    Then run `bd setup opencode` — or the equivalent setup command for my agent — so
    the Beads workflow context is installed. Do not hand-edit AGENTS.md; let the
    setup command manage its own section.
@@ -53,6 +56,7 @@ Install the beads-bridge schema for OpenSpec into this project:
 
 ```bash
 git clone https://github.com/petsagouris/openspec-beads /tmp/openspec-beads
+mkdir -p ./openspec/schemas
 cp -R /tmp/openspec-beads/openspec/schemas/beads-bridge ./openspec/schemas/beads-bridge
 rm -rf /tmp/openspec-beads
 openspec schema validate beads-bridge

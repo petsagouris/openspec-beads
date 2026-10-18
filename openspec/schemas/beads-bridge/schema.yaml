@@ -343,14 +343,18 @@ apply:
 
     ## 0. Preflight
 
-    Run all three before changing anything. If any fails, stop and report it.
+    Run all three before changing anything. 0.1 and 0.3 are checks: if either
+    fails, stop and report it. 0.2 is a repair: if the plan is missing, produce
+    it before continuing.
 
     1. Confirm the database belongs to this project: `bd where` must resolve
        inside this repository. If it resolves elsewhere, stop. A wrong
        database means beads landing in the wrong project.
     2. Confirm the plan exists: `beads/plan.json` must be present. If it is
-       missing, the `beads` artifact has not been created yet; create it
-       before applying.
+       missing, the `beads` artifact has not been created yet - produce it with
+       that artifact's own instruction
+       (`openspec instructions beads --change <change-name> --json`) before
+       applying.
     3. Check whether this change is already materialized:
        `bd list --label change:<change-name> --json --all`
        A non-empty result means the graph already exists. Do NOT run
@@ -368,13 +372,19 @@ apply:
     Then record what was created, so the index and the database can be checked
     against each other later:
 
-    - Append the minted bead id to each task's own line in `tasks.md` as
-      `(bd-xxxx)`, taken from the `ids` map the command returned.
-    - Record the epic's id once as a plain bullet under
-      `## Workflow follow-up` in `tasks.md`, so later steps can find it
-      without a lookup. `bd list --label change:<change-name> --pinned --json`
-      finds it again if that bullet is ever lost.
+    - The command returns an `ids` map keyed by the plan's node keys, which are
+      the task ids. Append each minted bead id, in parentheses, to the end of
+      that task's own line in `tasks.md` - so `- [ ] 2.1 Do a thing` becomes
+      `- [ ] 2.1 Do a thing (cad-a1b2)`. The prefix is this project's own; it
+      is not a literal `bd-`.
+    - Create a `## Workflow follow-up` section at the end of `tasks.md` if it is
+      not already there, and record the epic's id in it as a plain bullet, so
+      later steps can find it without a lookup.
+      `bd list --label change:<change-name> --pinned --json` finds it again if
+      that bullet is ever lost.
     - `openspec validate <change-name>` must still pass.
+    - Committing is out of scope for this schema. Follow the project's own git
+      policy; the plan's `commit_message` is a suggestion, not an instruction.
 
     ## 2. The loop
 
@@ -405,9 +415,13 @@ apply:
 
     - **Spec-level behaviour unchanged** - a defect, a chore, a gap in the
       plan: `bd create "<title>" -t bug|chore -p <0-4> --deps
-      discovered-from:<epic-id> -l discovery`. The `discovery` label is what
-      makes the pre-archive check a single query. It belongs to this change's
-      trail but not to its task list. Carry on.
+      discovered-from:<epic-id> -l "discovery,change:<change-name>"`.
+      Both labels matter. `discovery` is what the pre-archive check queries,
+      and `change:<change-name>` is what makes the bead part of this change at
+      all. Labels are inherited from `--parent`, not from a `discovered-from`
+      dependency, so a bead linked that way carries no change label unless you
+      give it one. It belongs to this change's trail but not to its task list.
+      Carry on.
     - **Needs design decisions this change never made**: stop, and escalate it
       into its own OpenSpec change rather than absorbing it here.
     - **A security problem**: stop work, create the bead, and report it. Never
@@ -428,8 +442,12 @@ apply:
     **Then the matching graph change, by kind of edit:**
 
     - **Added** requirement or capability: create a bead for the new work with
-      `--deps discovered-from:<epic-id>` and a `capability:<path>` label, and
-      add a matching task to `tasks.md`. Nothing else moves.
+      `--deps discovered-from:<epic-id>` and the labels
+      `"change:<change-name>,capability:<path>"`, then add a matching task to
+      `tasks.md`. Nothing else moves. The change label is required for the same
+      reason as in section 3: nothing inherits it through a `discovered-from`
+      link, so without it the bead is invisible to every query scoped to this
+      change.
     - **Modified** requirement: the beads implementing it usually stay. If the
       work changed shape, `bd update <id>` its description and `bd note` why.
       If the work was replaced rather than adjusted, create the replacement and
@@ -453,8 +471,13 @@ apply:
 
     - *Tasks without beads*: every tracked line in `tasks.md` should carry a
       recorded bead id once the change is materialized.
-    - *Beads without tasks*: `bd list --label change:<change-name> --json`
-      should hold exactly one bead per tracked task.
+    - *Beads without tasks*: `bd list --label change:<change-name> --all --json`
+      should hold the pinned epic plus one bead per tracked task. Two things
+      here are easy to get wrong. `bd list` omits closed issues unless `--all`
+      is passed, so without it the query returns nothing once work is under way
+      and cannot tell "no beads exist" from "every bead is closed". And the epic
+      carries the same label as the tasks, so the count is one more than the
+      number of tracked tasks rather than exactly equal to it.
     - *Cycles*: `bd dep cycles` should be empty. The graph rejects cycles on
       write, so a non-empty result means something wrote around the tool.
     - Report what you find and say which record is wrong. Do not silently
@@ -472,8 +495,11 @@ apply:
 
     - `bd ready --label change:<change-name> --json` lists what can be started
       now, already excluding anything blocked.
-    - `bd list --label change:<change-name> --json` lists the change's tasks
-      with their status, which is the progress count.
+    - `bd list --label change:<change-name> --all --json` lists the change's
+      beads with their status, which is the progress count. `--all` is not
+      optional: without it the query omits closed beads, so it returns nothing
+      once any work is done and cannot tell "no beads exist" from "every bead
+      is closed".
     - `bd blocked` explains anything waiting.
     - A bead left `in_progress` by an interrupted session can be released with
       `bd update <id> --status open` or reclaimed with `bd update <id> --claim`.
@@ -497,13 +523,12 @@ apply:
       modification outright rather than merely skipping auto-close. Any
       warning it raises about open children is a real signal: those tasks are
       unfinished, and closing over them should be a deliberate act.
-    - Leave verification and archiving to their own steps. Do not archive here.
+    - Do not archive here. Archiving is its own step, described in section 7.
 
-    ## 7. Archiving
+    ## 7. Handoff: what the archive step will require
 
-    Archiving is its own step, and it is gated on something outside this
-    repository's control, so that "done" means the work landed rather than that
-    someone said so.
+    This section describes the archive step so the handoff is explicit. None of
+    it is part of apply: do not perform any of it now.
 
     **Before archiving, check all four.** These are queries, not judgement:
 
