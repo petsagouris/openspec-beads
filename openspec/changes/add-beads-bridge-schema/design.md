@@ -56,6 +56,10 @@ Three candidates: a shell loop creating one issue per task, a Beads formula pour
 
 A shell loop is what the existing prior art does, and its own changelog explains why it looks the way it does: `bd create --file` panicked on bulk markdown import, so the workaround parses markdown in bash and creates issues one at a time with a delay between calls. That is N transactions, N commit points, and a partial-failure state to reconcile. A formula expresses reusable structure, but this plan is per-change data, and a formula would be a second, competing way to author the same graph. The graph plan is a different code path from the importer that panicked, creates the graph atomically, and has a `--dry-run` for review.
 
+Probing found the limit that matters: materialization is not idempotent. The same 37-node plan run twice produced 74 issues, because the plan pins no ids and Beads mints fresh hashes each time. Idempotency therefore cannot come from the CLI and must come from the preflight, which refuses to materialize when beads for the change already exist.
+
+That check has to key off the graph — a label-scoped query — and not off the ids recorded in `tasks.md`. An interruption between creating the graph and recording its ids leaves beads present and ids absent, and the next run would then duplicate a change that had already been materialized. Recording ids stays worth doing for traceability and for the reconciliation check, but it cannot be the guard.
+
 ### 5. Minted ids are recorded inline on the task line
 
 The bead id is written onto the same `tasks.md` line as its checkbox, so the index and the database cannot drift without becoming visible. A separate id map was the first design and was rejected: it is a third artifact to keep in sync. The cost is that task text carries a suffix, which OpenSpec renders in `status` and instructions output — cosmetic, and worth it for the failure mode it removes.
@@ -148,6 +152,7 @@ Run against Beads 1.3.1 and OpenSpec 1.14.3, in an isolated database and scratch
 | `pinned: true` on the epic | Removes it from `bd ready`; does **not** remove it from `bd ready --mol`'s ready steps |
 | Pinned epic after its last child closes | Remains **open** — a pinned root does not auto-close |
 | Pinned epic in `bd list` | Hidden by default; `--pinned` reveals it, and `bd show <id>` reaches it either way |
+| `bd create --graph` run twice on the same plan | **Creates duplicates.** 37 nodes became 74. Materialization is not idempotent, so the no-duplicate guarantee has to live in the preflight |
 | `bd ready` versus `bd ready --mol` JSON shape | Array of issues versus an object with `parallel_groups`, `ready_steps`, and `steps[]` |
 | Trailing `(osb-a1b2)` on a tracked task line | **Accepted.** Counted in `progress.total` and `progress.complete`, and the id stays visible in the task description |
 

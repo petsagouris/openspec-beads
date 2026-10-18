@@ -91,6 +91,11 @@ Materialization SHALL create the whole graph in a single `bd create --graph` inv
 - **WHEN** apply runs again on a change whose beads already exist
 - **THEN** no additional beads are created and the existing ones are reused
 
+#### Scenario: An already-materialized graph is detected from the graph itself
+
+- **WHEN** apply starts on a change whose beads already exist, but whose task lines carry no recorded ids
+- **THEN** the existing beads are detected before anything is created, because `bd create --graph` mints fresh issues on every run and would otherwise create a second copy of the whole graph
+
 #### Scenario: Minted ids are recorded beside their task
 
 - **WHEN** materialization succeeds
