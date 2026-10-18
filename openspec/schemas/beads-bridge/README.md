@@ -106,12 +106,13 @@ These instructions were verified against **OpenSpec 1.14.3** and **bd 1.3.1 (dev
 | A `gh:pr` gate awaiting a pull request **closed without merging** | **escalates** — `PR '…' was closed without merging` — and the blocked work stays blocked |
 | A `gh:pr` gate whose number does not resolve | escalates — `pull request not found` — and the gate stays open |
 | A `gh:run` gate awaiting a **successful** run | **resolves** — `workflow '…' succeeded` — and the blocked work returns |
+| A `gh:run` gate awaiting a **failed** run | **escalates** — `workflow '…' failed` — and the blocked work stays blocked |
 | A `gh:run` gate whose run ID does not exist | errors — `HTTP 404` — and the gate stays open |
 | A gate created with no `await_id` | reports `pending` and stays open |
 | `bd gate create --repo <owner/repo>` | **rejected** — `unknown flag: --repo` — even though the source reads it. To target another repository, set `metadata.repo` on the blocked issue and the gate inherits it |
 | The fields each gate asks `gh` for | `state,title` for pull requests, `status,conclusion,name` for runs. Both are valid, so [#3901](https://github.com/gastownhall/beads/issues/3901)'s invalid `merged` field is **not** requested on 1.3.1 |
 
-Not verified: a `gh:run` gate awaiting a *failed* run. No failed run was available to point at, so the run escalation path rests on the source rather than on observation. The pull-request escalation path was observed, and every failure mode above leaves the gate open and the change blocked rather than waving it through.
+Every path above was observed rather than read. Both gate types resolve, escalate and error, and every failure mode leaves the gate open — so a change gated on one stays blocked rather than being waved through. The GitHub behaviours were measured against a repository other than the one in hand, using `metadata.repo` on the blocked issue, which is also how the `--repo` divergence below was found.
 
 Reported upstream and **not** reproduced here: [#3879](https://github.com/gastownhall/beads/issues/3879) reports a failed materialization leaving a partial graph with no rollback, and 192 nodes taking 27+ minutes — both measured against `bd 1.0.0`, and neither reproduced on `1.3.1`. [#3893](https://github.com/gastownhall/beads/issues/3893) reports `--dry-run` persisting issues; it does not.
 
