@@ -102,9 +102,16 @@ These instructions were verified against **OpenSpec 1.14.3** and **bd 1.3.1 (dev
 | `bd close` on a blocked issue | refused without `--force` |
 | `bd ready --json` versus `bd ready --mol --json` | an array of issues versus an object carrying `parallel_groups` and `steps[]` |
 | Resolving a human gate as another actor | succeeds, and unblocks the gated work |
-| A `gh:pr` gate whose number does not resolve | escalated — `pull request not found` — and the gate stays open, so the change stays blocked |
+| A `gh:pr` gate awaiting a **merged** pull request | **resolves** — `PR '…' was merged` — and the blocked work returns to the ready frontier |
+| A `gh:pr` gate awaiting a pull request **closed without merging** | **escalates** — `PR '…' was closed without merging` — and the blocked work stays blocked |
+| A `gh:pr` gate whose number does not resolve | escalates — `pull request not found` — and the gate stays open |
+| A `gh:run` gate awaiting a **successful** run | **resolves** — `workflow '…' succeeded` — and the blocked work returns |
 | A `gh:run` gate whose run ID does not exist | errors — `HTTP 404` — and the gate stays open |
+| A gate created with no `await_id` | reports `pending` and stays open |
+| `bd gate create --repo <owner/repo>` | **rejected** — `unknown flag: --repo` — even though the source reads it. To target another repository, set `metadata.repo` on the blocked issue and the gate inherits it |
 | The fields each gate asks `gh` for | `state,title` for pull requests, `status,conclusion,name` for runs. Both are valid, so [#3901](https://github.com/gastownhall/beads/issues/3901)'s invalid `merged` field is **not** requested on 1.3.1 |
+
+Not verified: a `gh:run` gate awaiting a *failed* run. No failed run was available to point at, so the run escalation path rests on the source rather than on observation. The pull-request escalation path was observed, and every failure mode above leaves the gate open and the change blocked rather than waving it through.
 
 Reported upstream and **not** reproduced here: [#3879](https://github.com/gastownhall/beads/issues/3879) reports a failed materialization leaving a partial graph with no rollback, and 192 nodes taking 27+ minutes — both measured against `bd 1.0.0`, and neither reproduced on `1.3.1`. [#3893](https://github.com/gastownhall/beads/issues/3893) reports `--dry-run` persisting issues; it does not.
 
@@ -114,6 +121,7 @@ These instructions do not match the Beads documentation in one place, on purpose
 
 - **Gate creation.** The documentation's *Creating Gates* section shows `bd create --type=gate --await-type=…`. That flag does not exist and `bd` rejects it. This schema uses `bd gate create --blocks <issue>`, which is what the CLI implements and what its own usage strings show. Reported upstream as [#7664](https://github.com/gastownhall/beads/issues/7664), together with the graph-plan note below.
 - **The graph-plan edge direction.** The plan schema's help does not say which endpoint of an edge is which. `from_key` is the **dependent** and `to_key` the **blocker**; read the other way, every dependency in a plan is inverted and the plan still validates. The `beads` artifact's instruction states the direction explicitly for that reason.
+- **Targeting another repository from a gate.** The gate documentation says an ad-hoc gate takes `--repo <owner/repo>`. The CLI rejects that flag, though the source reads it. Set `metadata.repo` on the blocked issue instead, which the gate inherits — that is how the behaviours above were measured against a repository other than the one in hand.
 
 ## Limitations
 
