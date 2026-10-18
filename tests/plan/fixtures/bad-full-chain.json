@@ -1,0 +1,13 @@
+{
+  "commit_message": "fixture: every task serialised into one chain (E6)",
+  "nodes": [
+    { "key": "epic", "title": "fixture-change", "type": "epic", "priority": 1, "pinned": true },
+    { "key": "t1", "title": "Task one", "type": "task", "priority": 1, "parent_key": "epic" },
+    { "key": "t2", "title": "Task two", "type": "task", "priority": 2, "parent_key": "epic" },
+    { "key": "t3", "title": "Task three", "type": "task", "priority": 3, "parent_key": "epic" }
+  ],
+  "edges": [
+    { "from_key": "t2", "to_key": "t1", "type": "blocks" },
+    { "from_key": "t3", "to_key": "t2", "type": "blocks" }
+  ]
+}

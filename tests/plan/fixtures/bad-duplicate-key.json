@@ -1,0 +1,11 @@
+{
+  "commit_message": "fixture: duplicate node key (E1)",
+  "nodes": [
+    { "key": "epic", "title": "fixture-change", "type": "epic", "priority": 1, "pinned": true },
+    { "key": "t1", "title": "Task one", "type": "task", "parent_key": "epic" },
+    { "key": "t1", "title": "Task one again", "type": "task", "parent_key": "epic" },
+    { "key": "t2", "title": "Task two", "type": "task", "parent_key": "epic" },
+    { "key": "t3", "title": "Task three", "type": "task", "parent_key": "epic" }
+  ],
+  "edges": [{ "from_key": "t2", "to_key": "t1", "type": "blocks" }]
+}

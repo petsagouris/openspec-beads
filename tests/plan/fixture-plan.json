@@ -1,0 +1,56 @@
+{
+  "commit_message": "fixture: conforming plan for fixture-tasks.md",
+  "nodes": [
+    {
+      "key": "epic",
+      "title": "fixture-change",
+      "type": "epic",
+      "priority": 1,
+      "pinned": true,
+      "description": "Conforming fixture for the plan conformance check.",
+      "acceptance_criteria": "The conforming plan passes; every malformed fixture trips exactly its own rule.",
+      "labels": ["openspec", "change:fixture-change"]
+    },
+    {
+      "key": "1.1",
+      "title": "Write the plan conformance checker",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:fixture-change", "capability:schema-conformance-testing"],
+      "metadata": { "openspec_change": "fixture-change", "openspec_task": "1.1" }
+    },
+    {
+      "key": "1.2",
+      "title": "Write the fixture task list",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:fixture-change", "capability:schema-conformance-testing"],
+      "metadata": { "openspec_change": "fixture-change", "openspec_task": "1.2" }
+    },
+    {
+      "key": "2.1",
+      "title": "Record the conformance check as part of the quality gate",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:fixture-change", "capability:schema-conformance-testing"],
+      "metadata": { "openspec_change": "fixture-change", "openspec_task": "2.1" }
+    },
+    {
+      "key": "3.1",
+      "title": "Run the checker against every fixture plan",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:fixture-change", "capability:schema-conformance-testing"],
+      "metadata": { "openspec_change": "fixture-change", "openspec_task": "3.1" }
+    }
+  ],
+  "edges": [
+    { "from_key": "2.1", "to_key": "1.1", "type": "blocks" },
+    { "from_key": "2.1", "to_key": "1.2", "type": "blocks" },
+    { "from_key": "3.1", "to_key": "2.1", "type": "blocks" }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "commit_message": "fixture: more than one epic container (E5)",
+  "nodes": [
+    { "key": "epic", "title": "fixture-change", "type": "epic", "priority": 1, "pinned": true },
+    { "key": "epic2", "title": "a second container", "type": "epic", "priority": 1, "pinned": true },
+    { "key": "t1", "title": "Task one", "type": "task", "parent_key": "epic" },
+    { "key": "t2", "title": "Task two", "type": "task", "parent_key": "epic" },
+    { "key": "t3", "title": "Task three", "type": "task", "parent_key": "epic" }
+  ],
+  "edges": [{ "from_key": "t2", "to_key": "t1", "type": "blocks" }]
+}
