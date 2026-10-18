@@ -97,6 +97,7 @@ An agent that did not create the graph can resume from it: `bd ready --label cha
 
 - **A schema is a snapshot.** Copying the folder takes the version as it stands; it does not receive later improvements, including improvements to the four artifacts it shares with `spec-driven`. Pick those up by forking the bundled schema again and porting the difference deliberately.
 - **This is guidance, not enforcement.** The bridge lives entirely in instructions and templates — no script, no CLI change — so it depends on the agent following it. Where a fact can be checked, the instructions check it rather than asking; where they cannot, the conformance harness and the reconciliation check catch drift after the fact.
+- **It does not orchestrate.** A plan may carry execution hints and the bridge records them faithfully, but it never spawns work, picks a model, or dispatches a subagent. Whatever orchestrates reads the hints back out of the graph; the bridge only writes them down.
 - **Two stores, two sync paths.** Planning artifacts travel by git; bead state travels through Dolt (`bd dolt push`). A fresh clone has the change folder but not the graph.
 - **A container epic is pinned**, so it cannot be claimed as work — which also means it does not close on its last child and refuses to be closed without `--force`.
 - **A GitHub gate needs a git remote.** Without one it reports an error rather than closing, which should be read as "cannot tell yet".

@@ -302,6 +302,31 @@ artifacts:
       source task. Use metadata for values and labels for categories, never the
       other way round.
 
+      Execution hints. Where a task's nature warrants it, add Beads' documented
+      execution-hint keys to that node's metadata, so an orchestrator can route
+      the work without re-deriving intent from the task text:
+
+      - `execution_agent_type` - the worker class, such as `explorer`, `worker`
+        or `mixed`.
+      - `execution_suggested_model` - a capability tier, not a runtime binding.
+        Store a tier; a consumer on another provider substitutes a model of the
+        same tier rather than ignoring it.
+      - `execution_reasoning_effort` - `low`, `medium`, `high` or `xhigh`, using
+        those canonical values rather than a runtime-local scale.
+      - `execution_mode` - `local`, `delegated`, or staged between the two.
+      - `execution_parallel_group` - a name grouping work that may proceed
+        alongside the rest of its group.
+
+      Ordinary work carries none. An invented hint routes work for no reason,
+      and a hint is worth less than the provenance keys above it.
+
+      A parallel group is a claim about ordering, so it must agree with the
+      edges. Two nodes in the same group must not be joined by a `blocks` edge
+      in either direction, and a hint never substitutes for an edge: where one
+      task genuinely cannot start before another finishes, the `blocks` edge is
+      the record and no hint replaces it. A contradiction between the two is
+      reported rather than resolved silently.
+
       Edges - the rule that is easiest to get wrong. `from_key` is the DEPENDENT
       and `to_key` is the BLOCKER. An edge from task 4.2 to task 4.1 means 4.2 is
       blocked by 4.1. Writing it the other way round inverts every dependency
@@ -399,7 +424,11 @@ apply:
     b. Claim one: `bd update <id> --claim`. Claiming is atomic; if another
        session claimed it first, take the next.
     c. Do the work. Take what to build from the task's own text, what the
-       behaviour must be from the spec deltas, and how from design.md.
+       behaviour must be from the spec deltas, and how from design.md. If the
+       bead carries execution-hint metadata, read it before starting: it says
+       how the work should be carried out. Treat it as advice. A bead with no
+       hints is ordinary work and executes the same way, so a missing hint is
+       never a reason to stop, wait, or ask.
     d. Complete it, in this order:
        `bd close <id> --reason "..."` and only then mark that task's checkbox
        in `tasks.md`.
@@ -480,6 +509,10 @@ apply:
       number of tracked tasks rather than exactly equal to it.
     - *Cycles*: `bd dep cycles` should be empty. The graph rejects cycles on
       write, so a non-empty result means something wrote around the tool.
+    - *Parallel-group contradictions*: two beads carrying the same
+      `execution_parallel_group` must not be joined by a `blocks` edge in either
+      direction, because the group is a claim that they may proceed together.
+      Name both node ids when they are.
     - Report what you find and say which record is wrong. Do not silently
       repair a mismatch.
 

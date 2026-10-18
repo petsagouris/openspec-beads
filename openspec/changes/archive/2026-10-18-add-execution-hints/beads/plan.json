@@ -1,0 +1,120 @@
+{
+  "commit_message": "beads-bridge: add-execution-hints",
+  "nodes": [
+    {
+      "key": "epic",
+      "title": "add-execution-hints",
+      "type": "epic",
+      "priority": 1,
+      "pinned": true,
+      "description": "Let a change's plan declare how its tasks should be executed, as advisory metadata that agrees with the ordering the graph already encodes, and that no orchestrator is obliged to obey.",
+      "acceptance_criteria": "A plan node can carry Beads' documented execution-hint keys; a task of no particular nature carries provenance alone; a missing hint never blocks work; and a parallel-group hint that contradicts an ordering edge is reported by the reconciliation check rather than passing.",
+      "labels": ["openspec", "change:add-execution-hints"]
+    },
+    {
+      "key": "1.1",
+      "title": "Confirm bd create --graph round-trips every execution-hint key",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:add-execution-hints", "capability:execution-hints"],
+      "metadata": {
+        "openspec_change": "add-execution-hints",
+        "openspec_task": "1.1",
+        "execution_agent_type": "explorer",
+        "execution_mode": "local"
+      }
+    },
+    {
+      "key": "2.1",
+      "title": "Name the execution-hint keys in the beads artifact instruction",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:add-execution-hints", "capability:beads-plan-materialization"],
+      "metadata": { "openspec_change": "add-execution-hints", "openspec_task": "2.1" }
+    },
+    {
+      "key": "2.2",
+      "title": "Add the parallel-group consistency rule to the instruction",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:add-execution-hints", "capability:beads-plan-materialization"],
+      "metadata": { "openspec_change": "add-execution-hints", "openspec_task": "2.2" }
+    },
+    {
+      "key": "3.1",
+      "title": "State in apply that hints are read and never block",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:add-execution-hints", "capability:execution-hints"],
+      "metadata": {
+        "openspec_change": "add-execution-hints",
+        "openspec_task": "3.1",
+        "execution_parallel_group": "instruction-and-docs"
+      }
+    },
+    {
+      "key": "3.2",
+      "title": "Report a parallel-group contradiction in the reconciliation check",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:add-execution-hints", "capability:spec-change-reconciliation"],
+      "metadata": { "openspec_change": "add-execution-hints", "openspec_task": "3.2" }
+    },
+    {
+      "key": "4.1",
+      "title": "Document execution hints in the schema README",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:add-execution-hints", "capability:custom-schema-packaging"],
+      "metadata": {
+        "openspec_change": "add-execution-hints",
+        "openspec_task": "4.1",
+        "execution_parallel_group": "instruction-and-docs"
+      }
+    },
+    {
+      "key": "4.2",
+      "title": "State the no-orchestration limitation in the repository README",
+      "type": "task",
+      "priority": 3,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:add-execution-hints", "capability:custom-schema-packaging"],
+      "metadata": { "openspec_change": "add-execution-hints", "openspec_task": "4.2" }
+    },
+    {
+      "key": "5.1",
+      "title": "Confirm the conformance harness and the end-to-end cycle still pass",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:add-execution-hints", "capability:schema-conformance-testing"],
+      "metadata": { "openspec_change": "add-execution-hints", "openspec_task": "5.1" }
+    },
+    {
+      "key": "5.2",
+      "title": "Confirm the archive merge applies the MODIFIED delta correctly",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:add-execution-hints", "capability:beads-plan-materialization"],
+      "metadata": { "openspec_change": "add-execution-hints", "openspec_task": "5.2" }
+    }
+  ],
+  "edges": [
+    { "from_key": "2.1", "to_key": "1.1", "type": "blocks" },
+    { "from_key": "2.2", "to_key": "2.1", "type": "blocks" },
+    { "from_key": "3.1", "to_key": "2.1", "type": "blocks" },
+    { "from_key": "3.2", "to_key": "2.2", "type": "blocks" },
+    { "from_key": "4.1", "to_key": "2.1", "type": "blocks" },
+    { "from_key": "4.2", "to_key": "4.1", "type": "blocks" },
+    { "from_key": "5.1", "to_key": "3.2", "type": "blocks" },
+    { "from_key": "5.1", "to_key": "4.2", "type": "blocks" },
+    { "from_key": "5.2", "to_key": "5.1", "type": "blocks" }
+  ]
+}

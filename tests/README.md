@@ -81,7 +81,12 @@ Every command in it is one the schema's own instructions tell an agent to run, s
 
 ## Hermetic
 
-Every run creates its own Beads database under the system temporary directory and deletes it afterwards. Before and after, the runner fingerprints this repository's own change folders and beads, and fails if either changed. The harness therefore needs no project database to exist and cannot corrupt the work graph it exists to protect.
+Every run creates its own Beads database under the system temporary directory and deletes it afterwards. Before and after, the runner fingerprints this repository's own beads and change folders. The harness therefore needs no project database to exist and cannot corrupt the work graph it exists to protect.
+
+Two notes on how far that check reaches, both learned by getting it wrong:
+
+- **The bead fingerprint is a hard failure.** Beads are what the harness could plausibly pollute, since every `bd` call is supposed to be pointed at the throwaway database with `BEADS_DIR`.
+- **A change folder that appears mid-run is a warning, not a failure.** The harness never creates one, so a new entry means someone else is working in this repository at the same time — indistinguishable, from inside the run, from pollution. A check that fails whenever a human opens a change is worse than one that says so. A change folder that *disappears* is still a hard failure, because nothing but damage removes one.
 
 ## Not copied to adopters
 

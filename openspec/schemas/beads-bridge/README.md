@@ -64,6 +64,26 @@ operations:
       - Confirm `bd dep cycles` is empty and the change's epic is closed.
 ```
 
+## Execution hints
+
+A plan node may say *how* its task should be executed, using Beads' documented execution-hint metadata keys. An orchestrator reads these before dispatching work, and they take precedence over free-form notes for routing decisions.
+
+| Key | Values |
+| --- | --- |
+| `execution_agent_type` | a worker class, such as `explorer`, `worker` or `mixed` |
+| `execution_suggested_model` | a capability tier, not a runtime binding — a consumer on another provider substitutes a model of the same tier |
+| `execution_reasoning_effort` | `low`, `medium`, `high` or `xhigh` |
+| `execution_mode` | `local`, `delegated`, or staged between the two |
+| `execution_parallel_group` | a name grouping work that may proceed alongside the rest of its group |
+
+Three things about them are deliberate:
+
+- **They are advisory.** A hint informs how work is carried out and never gates it. A bead with no hints executes exactly like any other, so a missing hint is never a reason to stop.
+- **They are not ordering.** Where one task cannot start before another finishes, that is a `blocks` edge. A hint never substitutes for an edge, and a parallel group that contradicts an edge is reported rather than resolved silently.
+- **They are recorded, not acted on.** The bridge does not orchestrate: it does not spawn subagents, choose models, or dispatch work. It writes down what the plan decided so that whatever does orchestrate can read it.
+
+Beads documents these keys as advisory metadata, not a validated contract, so a misspelled key is a silently inert hint rather than an error. The instruction names them explicitly for that reason.
+
 ## Limitations
 
 - **A schema is a snapshot.** Copying this folder means taking the version as it stands. It does not receive later improvements, including improvements to the four artifacts it shares with `spec-driven`. To pick those up, fork the bundled schema again and port the difference deliberately.
