@@ -1,0 +1,115 @@
+{
+  "commit_message": "beads-bridge: clarify-gate-guarantees",
+  "nodes": [
+    {
+      "key": "epic",
+      "title": "clarify-gate-guarantees",
+      "type": "epic",
+      "priority": 1,
+      "pinned": true,
+      "description": "Make every claim this repository makes about what a gate guarantees match what the gate actually does, and record what the instructions were verified against so a reader can tell a verified instruction from a plausible one.",
+      "acceptance_criteria": "No gate type is described in terms stronger than its behaviour: a human gate is a record of a decision any caller can make, a GitHub gate reports an error rather than closing when it cannot be evaluated, and the type known to fail when evaluated is named as such. The schema README carries a verification baseline with versions, a date, and the behaviours measured rather than assumed, plus a note wherever an instruction deliberately differs from upstream documentation.",
+      "labels": ["openspec", "change:clarify-gate-guarantees"]
+    },
+    {
+      "key": "1.1",
+      "title": "Reproduce that any caller can resolve a human gate",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:clarify-gate-guarantees", "capability:beads-evidence"],
+      "metadata": {
+        "openspec_change": "clarify-gate-guarantees",
+        "openspec_task": "1.1",
+        "execution_agent_type": "explorer",
+        "execution_parallel_group": "reproduce"
+      }
+    },
+    {
+      "key": "1.2",
+      "title": "Reproduce what bd gate check does with a gh:pr gate",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:clarify-gate-guarantees", "capability:beads-evidence"],
+      "metadata": {
+        "openspec_change": "clarify-gate-guarantees",
+        "openspec_task": "1.2",
+        "execution_agent_type": "explorer",
+        "execution_parallel_group": "reproduce"
+      }
+    },
+    {
+      "key": "2.1",
+      "title": "Rewrite the gate section of the apply instruction",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:clarify-gate-guarantees", "capability:beads-evidence"],
+      "metadata": { "openspec_change": "clarify-gate-guarantees", "openspec_task": "2.1" }
+    },
+    {
+      "key": "2.2",
+      "title": "Add the verification baseline to the schema README",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:clarify-gate-guarantees", "capability:custom-schema-packaging"],
+      "metadata": { "openspec_change": "clarify-gate-guarantees", "openspec_task": "2.2" }
+    },
+    {
+      "key": "2.3",
+      "title": "Add the divergence note to the schema README",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:clarify-gate-guarantees", "capability:custom-schema-packaging"],
+      "metadata": {
+        "openspec_change": "clarify-gate-guarantees",
+        "openspec_task": "2.3",
+        "execution_parallel_group": "docs"
+      }
+    },
+    {
+      "key": "2.4",
+      "title": "Correct the repository README gate limitations",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:clarify-gate-guarantees", "capability:custom-schema-packaging"],
+      "metadata": {
+        "openspec_change": "clarify-gate-guarantees",
+        "openspec_task": "2.4",
+        "execution_parallel_group": "docs"
+      }
+    },
+    {
+      "key": "3.1",
+      "title": "Confirm the harness and the end-to-end cycle still pass",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:clarify-gate-guarantees", "capability:schema-conformance-testing"],
+      "metadata": { "openspec_change": "clarify-gate-guarantees", "openspec_task": "3.1" }
+    },
+    {
+      "key": "3.2",
+      "title": "Confirm both MODIFIED deltas merge correctly",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic",
+      "labels": ["openspec", "change:clarify-gate-guarantees", "capability:beads-plan-materialization"],
+      "metadata": { "openspec_change": "clarify-gate-guarantees", "openspec_task": "3.2" }
+    }
+  ],
+  "edges": [
+    { "from_key": "2.1", "to_key": "1.1", "type": "blocks" },
+    { "from_key": "2.1", "to_key": "1.2", "type": "blocks" },
+    { "from_key": "2.2", "to_key": "1.2", "type": "blocks" },
+    { "from_key": "2.3", "to_key": "2.1", "type": "blocks" },
+    { "from_key": "2.4", "to_key": "2.1", "type": "blocks" },
+    { "from_key": "3.1", "to_key": "2.3", "type": "blocks" },
+    { "from_key": "3.1", "to_key": "2.4", "type": "blocks" },
+    { "from_key": "3.2", "to_key": "3.1", "type": "blocks" }
+  ]
+}

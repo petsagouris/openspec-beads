@@ -21,7 +21,7 @@ design ───────────────────┘
 - **A `beads` artifact** turns the change's tasks into a Beads issue graph, in one atomic transaction.
 - **Apply executes the graph**: work is selected from the ready frontier, claimed atomically, and closed when done. The checklist stays the index a reviewer reads; the graph is what decides what is next.
 - **A spec change mid-implementation is paired.** Every delta operation has a matching graph operation, so the specs and the graph cannot drift apart silently.
-- **Archiving is gated on the real world** — a merged pull request, a green CI run, a person's sign-off — rather than on a timestamp.
+- **Archiving is gated on a condition outside the repository** — a cooldown, a recorded decision, or a GitHub condition — rather than on a timestamp. Each type is worth what it is worth: a timer closes itself, a human gate records a decision that anyone can make, and a GitHub gate reports an error rather than closing when it cannot be evaluated.
 - **The four planning artifacts are untouched.** The schema forks the bundled `spec-driven` schema and adds one artifact; `proposal`, `specs`, `design` and `tasks` keep their ids, paths, dependency edges and templates byte for byte.
 
 ## Install
@@ -100,7 +100,8 @@ An agent that did not create the graph can resume from it: `bd ready --label cha
 - **It does not orchestrate.** A plan may carry execution hints and the bridge records them faithfully, but it never spawns work, picks a model, or dispatches a subagent. Whatever orchestrates reads the hints back out of the graph; the bridge only writes them down.
 - **Two stores, two sync paths.** Planning artifacts travel by git; bead state travels through Dolt (`bd dolt push`). A fresh clone has the change folder but not the graph.
 - **A container epic is pinned**, so it cannot be claimed as work — which also means it does not close on its last child and refuses to be closed without `--force`.
-- **A GitHub gate needs a git remote.** Without one it reports an error rather than closing, which should be read as "cannot tell yet".
+- **A GitHub gate cannot be relied on yet.** With no git remote it reports an error rather than closing, and a `gh:pr` gate cannot close at all today, because the check asks `gh` for a field it does not have. An unevaluatable gate stays open, so the change stays blocked rather than being waved through.
+- **The instructions carry a verification baseline.** The schema README records the tool versions they were verified against, the date, and the behaviours that were measured rather than assumed — including the one place where they deliberately differ from the Beads documentation, so that difference is not "corrected" away.
 - **The conformance harness tests the schemas in this repository and is not copied to adopters.** You get the folder, not the harness.
 
 ## Repository layout

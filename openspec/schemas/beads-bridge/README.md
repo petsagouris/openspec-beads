@@ -84,6 +84,35 @@ Three things about them are deliberate:
 
 Beads documents these keys as advisory metadata, not a validated contract, so a misspelled key is a silently inert hint rather than an error. The instruction names them explicitly for that reason.
 
+## Verification baseline
+
+These instructions were verified against **OpenSpec 1.14.3** and **bd 1.3.1 (dev)** on **2026-10-18**, on Linux with the embedded Dolt backend. What follows was measured rather than assumed, and it is the reason several instructions are worded more narrowly than they could be.
+
+| Behaviour | Measured result |
+| --- | --- |
+| `bd create --graph` with a nested artifact path | accepted; the plan resolves to `<change>/beads/plan.json` |
+| `bd create --graph`, 101 nodes / 180 edges | completes in ~14s in one transaction |
+| `bd create --graph`, 193 nodes / 624 edges | completes in ~41s |
+| Interrupting a materialization at 4s, 8s, 10s and 12s of a 14s run | **0 issues** each time — nothing partial survives |
+| Interrupting at 13s | the complete graph and the full id map |
+| Running the same plan twice | **duplicates** — a 37-node plan produced 74 issues, so the no-duplicate guard is the preflight, not the CLI |
+| Dotted node keys such as `4.2` | accepted |
+| Labels, nested metadata, `acceptance_criteria`, `spec_id` | stored and returned intact |
+| A pinned epic | excluded from `bd ready` and `bd list`; does not auto-close; refuses `bd close` without `--force` |
+| `bd close` on a blocked issue | refused without `--force` |
+| `bd ready --json` versus `bd ready --mol --json` | an array of issues versus an object carrying `parallel_groups` and `steps[]` |
+| Resolving a human gate as another actor | succeeds, and unblocks the gated work |
+| `gh pr view --json merged` | rejected — `Unknown JSON field: "merged"` |
+
+Reported upstream and **not** reproduced here: [#3879](https://github.com/gastownhall/beads/issues/3879) reports a failed materialization leaving a partial graph with no rollback, and 192 nodes taking 27+ minutes — both measured against `bd 1.0.0`, and neither reproduced on `1.3.1`. [#3893](https://github.com/gastownhall/beads/issues/3893) reports `--dry-run` persisting issues; it does not.
+
+### Deliberate divergences from upstream documentation
+
+These instructions do not match the Beads documentation in one place, on purpose. Do not "correct" them back.
+
+- **Gate creation.** The documentation's *Creating Gates* section shows `bd create --type=gate --await-type=…`. That flag does not exist and `bd` rejects it. This schema uses `bd gate create --blocks <issue>`, which is what the CLI implements and what its own usage strings show. Reported upstream as [#7664](https://github.com/gastownhall/beads/issues/7664), together with the graph-plan note below.
+- **The graph-plan edge direction.** The plan schema's help does not say which endpoint of an edge is which. `from_key` is the **dependent** and `to_key` the **blocker**; read the other way, every dependency in a plan is inverted and the plan still validates. The `beads` artifact's instruction states the direction explicitly for that reason.
+
 ## Limitations
 
 - **A schema is a snapshot.** Copying this folder means taking the version as it stands. It does not receive later improvements, including improvements to the four artifacts it shares with `spec-driven`. To pick those up, fork the bundled schema again and port the difference deliberately.

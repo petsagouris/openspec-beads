@@ -575,23 +575,30 @@ apply:
 
     **Then the gate.** Create one bead representing the wait, so nothing has to
     poll. `bd gate create` blocks the issue it is given, and the blocked change
-    drops out of `bd ready` until the gate is resolved:
+    drops out of `bd ready` until the gate closes. A gate is an ordinary bead,
+    so it appears in `bd blocked` like any other blocker rather than hiding in a
+    scheduler.
 
-    - Pull request merged:
-      `bd gate create --type=gh:pr --blocks <epic-id> --await-id=<pr-number>`
-    - Continuous integration green:
-      `bd gate create --type=gh:run --blocks <epic-id> --await-id=<run-id>`
-    - A cooldown:
-      `bd gate create --type=timer --blocks <epic-id> --timeout=24h`
-    - A person's sign-off:
-      `bd gate create --type=human --blocks <epic-id> --reason="..."`
-      which closes only on `bd gate resolve <gate-id>`
+    What each type is actually worth:
 
-    Evaluate the automatic ones with `bd gate check`. A GitHub gate is
-    evaluated against the current repository's remote, so with no remote it
-    reports an error rather than closing, and that error should be read as
-    "cannot tell yet" rather than "passed". A timer gate closes on
-    `bd gate check` once its timeout elapses. While a gate is open the change
-    is not ready to archive; once it closes, archive with the project's usual
-    step. A gate is an ordinary bead, so it appears in `bd blocked` like any
-    other blocker rather than hiding in a scheduler.
+    - **A cooldown** - `bd gate create --type=timer --blocks <epic-id>
+      --timeout=24h`. Closes automatically on `bd gate check` once the duration
+      elapses. The only type that reliably closes itself.
+    - **A recorded decision** - `bd gate create --type=human --blocks <epic-id>
+      --reason="..."`. Closes only on `bd gate resolve <gate-id>`, but *anyone*
+      can run that, including the agent whose work the gate blocks. Treat it as
+      a place to record that a decision was made, never as a barrier that
+      prevents one. It is not an approval mechanism.
+    - **A GitHub condition** - `bd gate create --type=gh:pr --blocks <epic-id>
+      --await-id=<pr-number>`, or `--type=gh:run --await-id=<run-id>`.
+      Evaluated by `bd gate check` against the current repository's remote. Two
+      caveats, both current: with no remote it reports an error rather than
+      closing, and a `gh:pr` gate cannot close at all today, because the check
+      asks `gh` for a field `gh` does not have. An unevaluatable gate stays
+      open, which fails in the safe direction - the change stays blocked rather
+      than being waved through - but do not rely on a pull-request gate until
+      that is fixed.
+
+    Whatever type you choose, an error from `bd gate check` means "cannot tell
+    yet" and never "satisfied". While a gate is open the change is not ready to
+    archive; once it closes, archive with the project's usual step.
