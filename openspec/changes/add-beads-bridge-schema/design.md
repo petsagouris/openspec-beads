@@ -92,7 +92,7 @@ The mitigation is to lean on facts instead of prose wherever a fact exists. `ope
 
 A spec change mid-implementation is two problems. The artifact side is already solved: the change's artifacts are pre-archive deltas, and OpenSpec's own update flow revises them and reviews their coherence. Reimplementing that would duplicate a working mechanism.
 
-So the bridge owns only the graph side and the *pairing*. Each delta operation — ADDED, MODIFIED, REMOVED, RENAMED — is mapped to its graph and checklist consequences, applied in the same step as the spec edit. The reconciliation check exists to catch the case where only one side moved.
+One limit is worth stating because it was tested rather than assumed: `openspec validate` checks each artifact's own shape and does not compare artifacts against each other. A delta spec for a capability the proposal never names passes validation cleanly. So "the proposal lists it" is held up by the coherence review and by a human reading the change, not by the validator — and the reconciliation check is what catches the two records drifting apart.
 
 ### 11. Discoveries are dispositioned, not absorbed
 
@@ -154,6 +154,7 @@ Run against Beads 1.3.1 and OpenSpec 1.14.3, in an isolated database and scratch
 | `pinned: true` on the epic | Removes it from `bd ready`; does **not** remove it from `bd ready --mol`'s ready steps |
 | Pinned epic after its last child closes | Remains **open** — a pinned root does not auto-close |
 | Closing a pinned epic | **Refused** without `--force`: "cannot modify pinned issue". With `--force` it closes and names any still-open children |
+| Closing a blocked issue | **Refused** without `--force`: "cannot close blocked issue". `bd defer` works regardless. Beads guards state changes that would otherwise happen silently, so `--force` marks a deliberate act |
 | Pinned epic in `bd list` | Hidden by default; `--pinned` reveals it, and `bd show <id>` reaches it either way |
 | `bd create --graph` run twice on the same plan | **Creates duplicates.** 37 nodes became 74. Materialization is not idempotent, so the no-duplicate guarantee has to live in the preflight |
 | `bd ready` versus `bd ready --mol` JSON shape | Array of issues versus an object with `parallel_groups`, `ready_steps`, and `steps[]` |

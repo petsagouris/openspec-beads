@@ -412,7 +412,60 @@ apply:
     - **A security problem**: stop work, create the bead, and report it. Never
       continue silently past a security finding.
 
-    ## 4. Resuming
+    ## 4. When the spec changes mid-implementation
+
+    Implementation is where a spec gets proved wrong. When that happens the
+    artifact and the graph move together, in the same step. Moving one without
+    the other is exactly how the two records start disagreeing.
+
+    **Artifact side first, and do not reinvent it.** Revise the change's delta
+    specs and anything else the revision touches, then run the coherence review
+    so proposal, specs, design and tasks still agree. A capability introduced
+    here must reach `proposal.md`'s capabilities section — the proposal is the
+    contract that names capabilities.
+
+    **Then the matching graph change, by kind of edit:**
+
+    - **Added** requirement or capability: create a bead for the new work with
+      `--deps discovered-from:<epic-id>` and a `capability:<path>` label, and
+      add a matching task to `tasks.md`. Nothing else moves.
+    - **Modified** requirement: the beads implementing it usually stay. If the
+      work changed shape, `bd update <id>` its description and `bd note` why.
+      If the work was replaced rather than adjusted, create the replacement and
+      `bd supersede <old> --with <new>`, which closes the old bead and records
+      the replacement link.
+    - **Removed** requirement: its beads are retired, not orphaned.
+      `bd defer <id>` when the work is only postponed, or
+      `bd close <id> --reason "spec: <requirement> removed"` when it is dead —
+      adding `--force` if the bead is still blocked, because Beads refuses to
+      close a blocked issue otherwise. That refusal is informative rather than
+      obstructive: a removed requirement whose blockers are unfinished is worth
+      noticing instead of forcing past in silence. The requirement's Reason and
+      Migration text belongs on the bead.
+    - **Renamed** requirement: nothing structural. Update labels and metadata,
+      and `bd note` the old and new names.
+    - **A capability dropped before it ever shipped**: remove its delta spec and
+      close or defer every bead carrying that capability's label.
+
+    **Reconciling the two records.** Run this read-only check after any spec
+    change, and again before recording evidence:
+
+    - *Tasks without beads*: every tracked line in `tasks.md` should carry a
+      recorded bead id once the change is materialized.
+    - *Beads without tasks*: `bd list --label change:<change-name> --json`
+      should hold exactly one bead per tracked task.
+    - *Cycles*: `bd dep cycles` should be empty. The graph rejects cycles on
+      write, so a non-empty result means something wrote around the tool.
+    - Report what you find and say which record is wrong. Do not silently
+      repair a mismatch.
+
+    **When the answer is not obvious.** Ask, but bound it: at most five
+    questions in one pass, and only where the answer changes what gets built.
+    Record each resolution in an artifact rather than leaving it in the
+    conversation — a decision that lives only in the transcript is lost with
+    the session.
+
+    ## 5. Resuming
 
     A session that did not create this graph needs no history to continue:
 
@@ -426,7 +479,7 @@ apply:
 
     Do not re-read the whole plan to resume. The graph is the state.
 
-    ## 5. Finishing
+    ## 6. Finishing
 
     - Every tracked task must have its bead closed and its box ticked. A task
       marked done whose bead is still open is a mismatch: fix it before

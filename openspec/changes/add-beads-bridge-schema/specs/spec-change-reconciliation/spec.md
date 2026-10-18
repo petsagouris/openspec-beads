@@ -39,6 +39,11 @@ A spec change made during implementation SHALL leave the change's artifacts mutu
 - **WHEN** a capability is introduced partway through implementation
 - **THEN** the proposal lists it and the change still passes `openspec validate`
 
+#### Scenario: Validation alone does not catch a missing announcement
+
+- **WHEN** a capability has a delta spec but the proposal does not name it
+- **THEN** `openspec validate` still passes, so the coherence review and the reconciliation check are what catch it rather than validation
+
 #### Scenario: Coherence is checked rather than assumed
 
 - **WHEN** the artifacts have been revised
