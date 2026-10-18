@@ -591,13 +591,14 @@ apply:
       prevents one. It is not an approval mechanism.
     - **A GitHub condition** - `bd gate create --type=gh:pr --blocks <epic-id>
       --await-id=<pr-number>`, or `--type=gh:run --await-id=<run-id>`.
-      Evaluated by `bd gate check` against the current repository's remote. Two
-      caveats, both current: with no remote it reports an error rather than
-      closing, and a `gh:pr` gate cannot close at all today, because the check
-      asks `gh` for a field `gh` does not have. An unevaluatable gate stays
-      open, which fails in the safe direction - the change stays blocked rather
-      than being waved through - but do not rely on a pull-request gate until
-      that is fixed.
+      Evaluated by `bd gate check` through the `gh` CLI against the current
+      repository's remote: a pull request resolves when it is merged and
+      escalates when it is closed without merging; a workflow run resolves when
+      it completes successfully and escalates when it fails or is cancelled. It
+      needs a git remote and a working `gh`, and a number that does not resolve
+      escalates or errors rather than passing. An error means "cannot tell yet":
+      the gate stays open and the change stays blocked, which fails in the safe
+      direction rather than waving the change through.
 
     Whatever type you choose, an error from `bd gate check` means "cannot tell
     yet" and never "satisfied". While a gate is open the change is not ready to

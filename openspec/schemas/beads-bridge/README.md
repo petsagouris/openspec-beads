@@ -102,7 +102,9 @@ These instructions were verified against **OpenSpec 1.14.3** and **bd 1.3.1 (dev
 | `bd close` on a blocked issue | refused without `--force` |
 | `bd ready --json` versus `bd ready --mol --json` | an array of issues versus an object carrying `parallel_groups` and `steps[]` |
 | Resolving a human gate as another actor | succeeds, and unblocks the gated work |
-| `gh pr view --json merged` | rejected — `Unknown JSON field: "merged"` |
+| A `gh:pr` gate whose number does not resolve | escalated — `pull request not found` — and the gate stays open, so the change stays blocked |
+| A `gh:run` gate whose run ID does not exist | errors — `HTTP 404` — and the gate stays open |
+| The fields each gate asks `gh` for | `state,title` for pull requests, `status,conclusion,name` for runs. Both are valid, so [#3901](https://github.com/gastownhall/beads/issues/3901)'s invalid `merged` field is **not** requested on 1.3.1 |
 
 Reported upstream and **not** reproduced here: [#3879](https://github.com/gastownhall/beads/issues/3879) reports a failed materialization leaving a partial graph with no rollback, and 192 nodes taking 27+ minutes — both measured against `bd 1.0.0`, and neither reproduced on `1.3.1`. [#3893](https://github.com/gastownhall/beads/issues/3893) reports `--dry-run` persisting issues; it does not.
 

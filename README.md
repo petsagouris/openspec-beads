@@ -100,7 +100,7 @@ An agent that did not create the graph can resume from it: `bd ready --label cha
 - **It does not orchestrate.** A plan may carry execution hints and the bridge records them faithfully, but it never spawns work, picks a model, or dispatches a subagent. Whatever orchestrates reads the hints back out of the graph; the bridge only writes them down.
 - **Two stores, two sync paths.** Planning artifacts travel by git; bead state travels through Dolt (`bd dolt push`). A fresh clone has the change folder but not the graph.
 - **A container epic is pinned**, so it cannot be claimed as work — which also means it does not close on its last child and refuses to be closed without `--force`.
-- **A GitHub gate cannot be relied on yet.** With no git remote it reports an error rather than closing, and a `gh:pr` gate cannot close at all today, because the check asks `gh` for a field it does not have. An unevaluatable gate stays open, so the change stays blocked rather than being waved through.
+- **A GitHub gate needs a git remote and a working `gh`.** It is evaluated through the `gh` CLI, and a number that does not resolve escalates or errors rather than passing. An unevaluatable gate stays open, so the change stays blocked rather than being waved through.
 - **The instructions carry a verification baseline.** The schema README records the tool versions they were verified against, the date, and the behaviours that were measured rather than assumed — including the one place where they deliberately differ from the Beads documentation, so that difference is not "corrected" away.
 - **The conformance harness tests the schemas in this repository and is not copied to adopters.** You get the folder, not the harness.
 
