@@ -16,7 +16,7 @@ node tests/run.mjs
 
 Exits `0` when every check passes and `1` when any check fails, printing one line per check.
 
-This runs the two mechanical layers below. The `scenarios` and `cold-reader` layers are not run by it — see their sections for how they are exercised.
+This runs the two mechanical layers below. `tests/e2e.sh` runs the whole cycle; the `scenarios` and `cold-reader` layers are exercised as described in their sections.
 
 ## Layers
 
@@ -68,6 +68,16 @@ The bridge is prose, and the question that matters is not whether the author can
 - the apply instruction, on a scratch change whose tasks do real, observable work
 
 A divergence is recorded against the passage responsible and reported as a failure. These tests earned their place: they found nine defects in the apply instruction that no mechanical check could, including a pre-archive gate that could never fire because discovery beads were never given the change's label, and a reconciliation query that silently returned nothing once any work was done.
+
+### `e2e` — the whole cycle
+
+```bash
+bash tests/e2e.sh
+```
+
+Installs the schema into a throwaway project and runs the cycle the instructions describe: create a change, produce all five artifacts, materialize the graph, work the ready frontier, verify against the graph, and archive behind a gate. It then exercises three failure paths — a ticked task whose bead is open, an open discovery at archive time, and a plan whose edge reverses a parent relationship — and asserts that each is reported rather than passing silently.
+
+Every command in it is one the schema's own instructions tell an agent to run, so it also checks that those instructions are executable rather than merely plausible. It uses a human gate rather than a GitHub one, because a `gh:*` gate needs a git remote to evaluate.
 
 ## Hermetic
 
