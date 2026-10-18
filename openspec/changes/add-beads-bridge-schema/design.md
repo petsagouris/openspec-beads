@@ -155,12 +155,15 @@ Run against Beads 1.3.1 and OpenSpec 1.14.3, in an isolated database and scratch
 | Pinned epic after its last child closes | Remains **open** — a pinned root does not auto-close |
 | Closing a pinned epic | **Refused** without `--force`: "cannot modify pinned issue". With `--force` it closes and names any still-open children |
 | Closing a blocked issue | **Refused** without `--force`: "cannot close blocked issue". `bd defer` works regardless. Beads guards state changes that would otherwise happen silently, so `--force` marks a deliberate act |
+| Gate creation | The documented `bd create --await-type=...` form is **rejected**; the interface is `bd gate create --blocks <issue>`. `--timeout` (not `--await-id`) drives a `timer` gate, which `bd gate check` then auto-resolves; a `human` gate needs `bd gate resolve`; a `gh:*` gate is evaluated against the git remote and **reports an error rather than closing** when there is none |
 | Pinned epic in `bd list` | Hidden by default; `--pinned` reveals it, and `bd show <id>` reaches it either way |
 | `bd create --graph` run twice on the same plan | **Creates duplicates.** 37 nodes became 74. Materialization is not idempotent, so the no-duplicate guarantee has to live in the preflight |
 | `bd ready` versus `bd ready --mol` JSON shape | Array of issues versus an object with `parallel_groups`, `ready_steps`, and `steps[]` |
 | Trailing `(osb-a1b2)` on a tracked task line | **Accepted.** Counted in `progress.total` and `progress.complete`, and the id stays visible in the task description |
 
 Two probes returned negative results and changed the design: both are recorded above in decisions 12 and 14, and the specs they invalidated were revised within this change rather than patched afterwards. Two earlier concerns were retired outright — the nested path is fine (so decision 5's fallback is unnecessary) and Beads itself rejects a reversed parent edge (so the conformance check duplicates a real constraint rather than inventing one).
+
+Testing also caught two places where Beads' own documentation and its CLI disagree. The graph-plan example's `from_key`/`to_key` reads backwards against observed behaviour, and the gate examples use a `bd create --await-type=...` form the CLI rejects outright — the real interface is `bd gate create --blocks <issue>`. Both would have shipped as broken instructions had they been written from the documentation, which is the argument for verifying a command before writing it into a schema rather than after.
 
 ## Risks / Trade-offs
 

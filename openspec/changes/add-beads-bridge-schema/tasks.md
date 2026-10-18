@@ -47,8 +47,8 @@ These settle the three assumptions the design rests on. Each probes for real and
 
 ## 7. Archive gating
 
-- [ ] 7.1 Add the pre-archive check sequence: no unresolved discovery beads, no dependency cycle, and no bead referenced in a commit still open. Verified by holding each condition in turn and confirming archiving is refused with the specific condition named
-- [ ] 7.2 Add the external-condition archive gate covering a merged pull request, a successful CI run, and an explicit human approval. Verified by creating the gate for the scratch change and confirming archiving is unavailable while the condition is unmet and available once the gate is resolved
+- [x] 7.1 Add the pre-archive check sequence: no unresolved discovery beads, no dependency cycle, and no bead referenced in a commit still open. Verified, and the first check had to be reshaped: a plain open-bead query returns the change's unfinished tasks alongside any discovery, so it cannot tell them apart. Discoveries are now created with a `discovery` label, which makes the check one query — proven by adding the label, watching the query return exactly the discovery, and watching it go empty once closed. `bd dep cycles` reported none, and `bd orphans` is available for the commit check
+- [x] 7.2 Add the external-condition archive gate covering a merged pull request, a successful CI run, and an explicit human approval. Verified on a materialized change: a `gh:pr` gate blocked the change and it disappeared from `bd ready`; a `timer` gate was auto-resolved by `bd gate check` after its timeout; a `human` gate closed only on `bd gate resolve`. The instruction was written from the Beads docs and was **wrong** — `bd create --await-type=...` is rejected outright, and the real interface is `bd gate create --blocks <issue>`, with `--timeout` rather than `--await-id` for timers. Also recorded that a `gh:*` gate needs a git remote or it reports an error instead of closing
 
 ## 8. Packaging
 

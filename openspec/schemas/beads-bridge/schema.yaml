@@ -405,8 +405,9 @@ apply:
 
     - **Spec-level behaviour unchanged** - a defect, a chore, a gap in the
       plan: `bd create "<title>" -t bug|chore -p <0-4> --deps
-      discovered-from:<epic-id>`. It belongs to this change's trail but not to
-      its task list. Carry on.
+      discovered-from:<epic-id> -l discovery`. The `discovery` label is what
+      makes the pre-archive check a single query. It belongs to this change's
+      trail but not to its task list. Carry on.
     - **Needs design decisions this change never made**: stop, and escalate it
       into its own OpenSpec change rather than absorbing it here.
     - **A security problem**: stop work, create the bead, and report it. Never
@@ -497,3 +498,42 @@ apply:
       warning it raises about open children is a real signal: those tasks are
       unfinished, and closing over them should be a deliberate act.
     - Leave verification and archiving to their own steps. Do not archive here.
+
+    ## 7. Archiving
+
+    Archiving is its own step, and it is gated on something outside this
+    repository's control, so that "done" means the work landed rather than that
+    someone said so.
+
+    **Before archiving, check all four.** These are queries, not judgement:
+
+    - *No unresolved discoveries*: `bd list --label change:<change-name>
+      --label discovery --status open --json` must be empty. Each one is
+      closed, deferred, or escalated first.
+    - *Nothing committed but still open*: `bd orphans` names beads a commit
+      referenced that were never closed.
+    - *No cycles*: `bd dep cycles` is empty.
+    - *The epic is closed*: the finishing step closed it.
+
+    **Then the gate.** Create one bead representing the wait, so nothing has to
+    poll. `bd gate create` blocks the issue it is given, and the blocked change
+    drops out of `bd ready` until the gate is resolved:
+
+    - Pull request merged:
+      `bd gate create --type=gh:pr --blocks <epic-id> --await-id=<pr-number>`
+    - Continuous integration green:
+      `bd gate create --type=gh:run --blocks <epic-id> --await-id=<run-id>`
+    - A cooldown:
+      `bd gate create --type=timer --blocks <epic-id> --timeout=24h`
+    - A person's sign-off:
+      `bd gate create --type=human --blocks <epic-id> --reason="..."`
+      which closes only on `bd gate resolve <gate-id>`
+
+    Evaluate the automatic ones with `bd gate check`. A GitHub gate is
+    evaluated against the current repository's remote, so with no remote it
+    reports an error rather than closing, and that error should be read as
+    "cannot tell yet" rather than "passed". A timer gate closes on
+    `bd gate check` once its timeout elapses. While a gate is open the change
+    is not ready to archive; once it closes, archive with the project's usual
+    step. A gate is an ordinary bead, so it appears in `bd blocked` like any
+    other blocker rather than hiding in a scheduler.

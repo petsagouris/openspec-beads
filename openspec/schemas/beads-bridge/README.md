@@ -51,6 +51,19 @@ Artifact ids usable as keys in `config.yaml` `rules` and `operations`: `proposal
 
 The plan is written by the `beads` artifact. It is not materialized until apply runs `bd create --graph beads/plan.json`, so the graph is reviewable before any issue exists.
 
+## Optional: carry the archive gate into the archive step
+
+A schema cannot set archive behaviour, because `config.yaml` owns that. The apply instruction describes the pre-archive checks and the gate; if you want them restated at archive time, add this to `openspec/config.yaml`:
+
+```yaml
+operations:
+  archive:
+    guidance:
+      - Confirm the change's gate bead has closed before archiving.
+      - Confirm no discovery bead for this change is still open.
+      - Confirm `bd dep cycles` is empty and the change's epic is closed.
+```
+
 ## Limitations
 
 - **A schema is a snapshot.** Copying this folder means taking the version as it stands. It does not receive later improvements, including improvements to the four artifacts it shares with `spec-driven`. To pick those up, fork the bundled schema again and port the difference deliberately.
