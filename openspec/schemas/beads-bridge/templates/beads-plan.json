@@ -1,0 +1,38 @@
+{
+  "commit_message": "beads-bridge: <REPLACE with the change name>",
+  "nodes": [
+    {
+      "key": "epic",
+      "title": "<REPLACE with the change name>",
+      "type": "epic",
+      "priority": 1,
+      "pinned": true,
+      "description": "<REPLACE: why this change exists, from proposal.md>",
+      "acceptance_criteria": "<REPLACE: what this change must deliver, from the spec deltas>",
+      "labels": ["openspec", "change:<REPLACE with the change name>"]
+    },
+    {
+      "key": "<REPLACE with the task id from tasks.md, e.g. 4.2>",
+      "title": "<REPLACE with the task description>",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic",
+      "labels": [
+        "openspec",
+        "change:<REPLACE with the change name>",
+        "capability:<REPLACE with the capability path, e.g. beads-evidence>"
+      ],
+      "metadata": {
+        "openspec_change": "<REPLACE with the change name>",
+        "openspec_task": "<REPLACE with the task id from tasks.md>"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from_key": "<REPLACE with the DEPENDENT task id>",
+      "to_key": "<REPLACE with the BLOCKER task id>",
+      "type": "blocks"
+    }
+  ]
+}

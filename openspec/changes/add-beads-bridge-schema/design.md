@@ -129,6 +129,8 @@ The cost is losing auto-close. That is acceptable: the explicit close was alread
 
 A further detail the probe surfaced: the two ready queries return different JSON shapes — `bd ready --json` an array of issues, `bd ready --mol --json` an object with `parallel_groups`, `ready_steps`, and a `steps[]` of `{issue, parallel_group, parallel_info}`. The instruction must not assume one shape for both.
 
+Pinning carries a second, unsought benefit: a pinned issue is hidden from `bd list` as well, so a label-scoped list returns exactly the task set while the epic stays addressable through `bd show <id>`. That is the right default for both progress reporting and reconciliation — neither should count the container as work — and it means evidence can still be attached to the epic directly.
+
 ## Probe results
 
 Run against Beads 1.3.1 and OpenSpec 1.14.3, in an isolated database and scratch changes, with every fixture removed afterwards. These resolve the gates in tasks group 1.
@@ -141,9 +143,11 @@ Run against Beads 1.3.1 and OpenSpec 1.14.3, in an isolated database and scratch
 | `waits-for` edge with `spawner_key` | **Accepted**; the edge is created |
 | `blocks` edge from a parent to its own child | **Rejected**, as a blocking cycle involving the child |
 | `type` and `priority` from the plan | Stored; `type` surfaces as `issue_type` in JSON output |
+| `labels`, `metadata`, `acceptance_criteria`, `spec_id` from the plan | **All stored.** Label filtering finds the nodes, nested metadata survives intact, and the typed fields land |
 | Container epic in the ready frontier | **Present** in both `bd ready` and `bd ready --mol` |
 | `pinned: true` on the epic | Removes it from `bd ready`; does **not** remove it from `bd ready --mol`'s ready steps |
 | Pinned epic after its last child closes | Remains **open** — a pinned root does not auto-close |
+| Pinned epic in `bd list` | Hidden by default; `--pinned` reveals it, and `bd show <id>` reaches it either way |
 | `bd ready` versus `bd ready --mol` JSON shape | Array of issues versus an object with `parallel_groups`, `ready_steps`, and `steps[]` |
 | Trailing `(osb-a1b2)` on a tracked task line | **Accepted.** Counted in `progress.total` and `progress.complete`, and the id stays visible in the task description |
 
