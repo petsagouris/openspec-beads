@@ -98,6 +98,10 @@ A discovery during apply is one of three things: out-of-scope work, a design pro
 
 There is a tempting shorthand in prior art: chaining dependencies by priority tier, so every higher-priority task blocks every lower-priority one. It is rejected outright. It serializes the graph, destroys the ready frontier's value, and ignores the parallelism the task author already expressed. Priority and ordering are separate axes: priority is a field on a node, ordering is an edge, and an edge exists only where one task genuinely cannot start before another finishes.
 
+Probing confirmed the direction and exposed a trap in the official example. `from_key` is the **dependent** and `to_key` the **blocker**: `{from_key: "t5", to_key: "t1", type: "blocks"}` produced "task 5 is blocked by task 1". The help text's own example reads the opposite way if `from`/`to` are taken as subject and object, so a plan written from intuition inverts every dependency — silently, and in a direction that still validates. That is precisely why the conformance check asserts direction instead of trusting the plan to be read correctly.
+
+The probe also confirmed that a `blocks` edge from a parent to its own child is rejected, as a blocking *cycle* involving the child rather than as a parent-child violation. The outcome is right, the message is not, which is why the conformance check reports that shape itself and names the reason.
+
 ### 13. Testing: mechanics automated, prose executed, the untestable part named
 
 The bridge's content is mostly prose, so testing has to be layered, and the layers differ sharply in strength.
@@ -110,6 +114,40 @@ The bridge's content is mostly prose, so testing has to be layered, and the laye
 Two consequences follow. Checks stay inline in the instruction rather than shipping as a script, because the schema folder must stay free of executables (decision 9) — the harness verifies those inline commands, it does not replace them. And runs must be hermetic, pointed at a throwaway database through `BEADS_DIR`, because a suite that wrote to this repository's own work graph would corrupt the record it exists to leave alone.
 
 This is also the one place where the design knowingly exceeds its reference material: the closest prior-art framework lists "no automated tests for the framework itself" among its known limitations, and OpenSpec's own update flow re-checks coherence without executing anything. Automating the mechanical half is cheap.
+
+### 14. The container epic is pinned, excluded from selection, and closed explicitly
+
+A container node with children is an ordinary open issue, so it appears in the ready frontier — in plain `bd ready`, and in `bd ready --mol <id>` where it turns up inside `parallel_groups`. An agent told to claim the first ready bead would be claiming its own container.
+
+`pinned: true` removes the epic from `bd ready` but **not** from `bd ready --mol`'s ready steps, and a pinned root never auto-closes: after its last child was closed, the pinned epic was still open. Three rules therefore hold together:
+
+- the plan sets `pinned: true` on the epic, so unscoped ready queries stay clean;
+- apply selects claimable work by the change's label and excludes the epic explicitly, because `--mol` will not do it;
+- the change's completion step closes the epic itself, because nothing else will.
+
+The cost is losing auto-close. That is acceptable: the explicit close was already the change's final step, and stating it is more honest than depending on a side effect of a flag set for a different reason. The `parallel_groups` view remains useful for reporting which work can proceed concurrently.
+
+A further detail the probe surfaced: the two ready queries return different JSON shapes — `bd ready --json` an array of issues, `bd ready --mol --json` an object with `parallel_groups`, `ready_steps`, and a `steps[]` of `{issue, parallel_group, parallel_info}`. The instruction must not assume one shape for both.
+
+## Probe results
+
+Run against Beads 1.3.1 and OpenSpec 1.14.3, in an isolated database and scratch changes, with every fixture removed afterwards. These resolve the gates in tasks group 1.
+
+| Probe | Result |
+| --- | --- |
+| Nested `generates: beads/plan.json` | **Accepted.** Validates, and resolves to `<changeRoot>/beads/plan.json` in `artifactPaths` |
+| `bd create --graph` with 15 nodes (epic via `parent_key` plus 14 tasks) and 3 `blocks` edges | **Accepted** in one transaction; returns a key-to-id map; children receive flat ids, not hierarchical ones |
+| `blocks` direction | `from_key` is the **dependent**, `to_key` the **blocker** |
+| `waits-for` edge with `spawner_key` | **Accepted**; the edge is created |
+| `blocks` edge from a parent to its own child | **Rejected**, as a blocking cycle involving the child |
+| `type` and `priority` from the plan | Stored; `type` surfaces as `issue_type` in JSON output |
+| Container epic in the ready frontier | **Present** in both `bd ready` and `bd ready --mol` |
+| `pinned: true` on the epic | Removes it from `bd ready`; does **not** remove it from `bd ready --mol`'s ready steps |
+| Pinned epic after its last child closes | Remains **open** — a pinned root does not auto-close |
+| `bd ready` versus `bd ready --mol` JSON shape | Array of issues versus an object with `parallel_groups`, `ready_steps`, and `steps[]` |
+| Trailing `(osb-a1b2)` on a tracked task line | **Accepted.** Counted in `progress.total` and `progress.complete`, and the id stays visible in the task description |
+
+Two probes returned negative results and changed the design: both are recorded above in decisions 12 and 14, and the specs they invalidated were revised within this change rather than patched afterwards. Two earlier concerns were retired outright — the nested path is fine (so decision 5's fallback is unnecessary) and Beads itself rejects a reversed parent edge (so the conformance check duplicates a real constraint rather than inventing one).
 
 ## Risks / Trade-offs
 

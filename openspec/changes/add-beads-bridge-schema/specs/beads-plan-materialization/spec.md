@@ -22,17 +22,22 @@ The `beads` artifact SHALL produce `beads/plan.json` conforming to Beads' `bd cr
 
 ### Requirement: One epic per change and one node per task
 
-The plan SHALL contain exactly one epic node representing the change and one node per tracked task in `tasks.md`, with every task node parented to that epic.
+The plan SHALL contain exactly one epic node representing the change and one node per tracked task in `tasks.md`, with every task node parented to that epic and the epic pinned so it is not claimable.
 
 #### Scenario: Every task is represented
 
 - **WHEN** `tasks.md` contains N tracked checkboxes
 - **THEN** the plan contains N task nodes plus one epic node
 
-#### Scenario: Closing the last task closes the epic
+#### Scenario: The container is not claimable work
 
-- **WHEN** the final child node of the epic is closed
-- **THEN** the epic closes as well
+- **WHEN** the epic node is created
+- **THEN** it is pinned, so an unscoped query for ready work does not return it
+
+#### Scenario: The epic is closed explicitly
+
+- **WHEN** the final task's bead is closed
+- **THEN** the epic remains open until the change's completion step closes it, because a pinned root does not close when its last child does
 
 ### Requirement: Edges encode only real ordering
 

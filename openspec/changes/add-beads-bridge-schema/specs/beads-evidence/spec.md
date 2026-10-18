@@ -15,6 +15,11 @@ The apply phase SHALL select work from the change's beads that have no open bloc
 - **WHEN** a task's bead has an open blocker
 - **THEN** that task is not selected for work
 
+#### Scenario: The container is excluded from selection
+
+- **WHEN** the change's ready work is queried during apply
+- **THEN** the change's epic is excluded from the candidates, in a label-scoped query and in a molecule-scoped query alike
+
 #### Scenario: A claim prevents collisions
 
 - **WHEN** two agents attempt to claim the same ready bead
