@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines how schemas in this repository are packaged so another project can adopt one by copying a single folder, with validation and agent-facing instructions that do not depend on this repository.
+Defines how schemas in this repository are packaged so another project can adopt one by copying a single folder, without depending on this repository.
 
 ## ADDED Requirements
 
@@ -20,19 +20,10 @@ Each schema SHALL live at `openspec/schemas/<name>/` and contain `schema.yaml`, 
 - **WHEN** the folder is copied into another project's `openspec/schemas/` directory
 - **THEN** the schema resolves and works without any other file from this repository
 
-### Requirement: Validation is the quality gate
-
-Every schema in this repository SHALL pass `openspec schema validate <name>`, and the repository SHALL document that command as the required check before schema work is considered complete.
-
-#### Scenario: A schema change is validated
-
-- **WHEN** a schema's `schema.yaml` or templates change
-- **THEN** `openspec schema validate <name>` is run for that schema before the work is considered complete
-
 #### Scenario: A missing template fails validation
 
 - **WHEN** `schema.yaml` declares an artifact whose template file is absent
-- **THEN** validation fails and names the missing template
+- **THEN** `openspec schema validate` fails and names the missing template
 
 ### Requirement: A single prompt installs a schema
 
@@ -75,3 +66,8 @@ The repository README SHALL state the project's limitations, including that an i
 
 - **WHEN** the repository README is read
 - **THEN** it states that copying a schema means taking a snapshot, and that upstream changes must be ported deliberately
+
+#### Scenario: The test boundary is documented
+
+- **WHEN** the repository README is read
+- **THEN** it states that the conformance harness tests this repository's schemas and is not copied to adopters

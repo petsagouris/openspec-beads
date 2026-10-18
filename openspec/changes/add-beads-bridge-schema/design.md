@@ -80,6 +80,8 @@ Ordering matters because the two records can be interrupted between. Closing fir
 
 No shell scripts, no CLI patches. The integration lives in instructions and templates. This was chosen knowing the cost: nothing is enforced by a harness hook, so the schema's rules are discipline rather than mechanism.
 
+The boundary is the schema folder. Adopters receive only `schema.yaml`, `templates/`, and `README.md`, so a check shipped inside it would be copied to projects that never run it. The conformance harness in decision 13 therefore lives outside the schema folder and observes the bridge rather than implementing it.
+
 The mitigation is to lean on facts instead of prose wherever a fact exists. `openspec validate`, the apply state machine, the graph's write-time cycle rejection, atomic claims, and Beads gates are all externally checkable. Where the schema must rely on agent judgement — deriving edges, dispositioning a discovery — the instruction makes the judgement explicit and reviewable rather than leaving it implicit. The assertions in this design that matter most are the ones a command can refute.
 
 ### 10. Spec changes are paired, and OpenSpec owns the artifact side
@@ -96,11 +98,25 @@ A discovery during apply is one of three things: out-of-scope work, a design pro
 
 There is a tempting shorthand in prior art: chaining dependencies by priority tier, so every higher-priority task blocks every lower-priority one. It is rejected outright. It serializes the graph, destroys the ready frontier's value, and ignores the parallelism the task author already expressed. Priority and ordering are separate axes: priority is a field on a node, ordering is an edge, and an edge exists only where one task genuinely cannot start before another finishes.
 
+### 13. Testing: mechanics automated, prose executed, the untestable part named
+
+The bridge's content is mostly prose, so testing has to be layered, and the layers differ sharply in strength.
+
+- **Mechanics are automated.** Schema structure and wiring are checked by `openspec schema validate` and by assertions on `openspec instructions --json` fields. The plan is checked by a conformance check: unique node keys, every edge endpoint resolving, no ordering edge derived from priority, and no edge reversing a `parent_key` relationship. These are deterministic, cheap, and catch the failure mode this design is most exposed to, since the plan is the only artifact that is both machine-checkable and easy to get subtly wrong.
+- **Prose is executed.** `openspec validate --strict` requires every requirement to carry at least one scenario, which makes the specs' scenarios the acceptance suite directly — no separate test-authoring pass, and no temptation to test something other than what was specified. Each case runs in a scratch project and is asserted on files and on beads.
+- **The prompt is tested against a cold reader.** The question that matters is not whether the author can follow the instruction but whether a session with no prior context can. The install prompt and the apply instruction are each handed to a fresh agent session, and the resulting state is asserted.
+- **One part is untestable, and is named as such.** Nothing can establish that an arbitrary third-party agent will follow the prose. Two things bound it: pushing every check that can be a command into a command, so the instruction says "run this and read the result" rather than asking the agent to judge its own state; and the cold-reader test, the closest available approximation of a naive reader.
+
+Two consequences follow. Checks stay inline in the instruction rather than shipping as a script, because the schema folder must stay free of executables (decision 9) — the harness verifies those inline commands, it does not replace them. And runs must be hermetic, pointed at a throwaway database through `BEADS_DIR`, because a suite that wrote to this repository's own work graph would corrupt the record it exists to leave alone.
+
+This is also the one place where the design knowingly exceeds its reference material: the closest prior-art framework lists "no automated tests for the framework itself" among its known limitations, and OpenSpec's own update flow re-checks coherence without executing anything. Automating the mechanical half is cheap.
+
 ## Risks / Trade-offs
 
 - **Two sync systems, two truths about durability.** Artifacts travel by git; bead state travels by Dolt, and the Dolt data directory is gitignored. A fresh clone gets the change folder and not the work graph. *Mitigation:* the change folder stays the durable contract and carries the id map and evidence summary inline; the graph is reconstructible from the plan.
 - **Evidence is not in the pull request by default.** A reviewer reading only the change folder sees the summary, not the full graph history. Accepted: putting the full trail in git would mean a second record that can disagree.
-- **Discipline, not enforcement.** The bridge cannot prevent an agent from ticking a box without closing a bead. *Mitigation:* the reconciliation check detects it, and verification reports it — detection rather than prevention, because prevention needs a harness hook this design deliberately does not have.
+- **Discipline, not enforcement.** The bridge cannot prevent an agent from ticking a box without closing a bead. *Mitigation:* the reconciliation check detects it and verification reports it — detection rather than prevention, because prevention needs a harness hook this design deliberately does not have. The scenario set exercises the check, but nothing forces a third party to run it.
+- **Prose is verified by execution, which is evidence rather than proof.** A passing scenario shows the instruction worked once, in one reading. *Mitigation:* the cold-reader test, plus keeping every checkable rule expressed as a command. The residual risk is a reader who follows the instruction differently and produces a plausible wrong result, which no amount of local testing removes.
 - **`tasks.md` becomes a projection.** If the graph changes and the checklist does not, the index lies. *Mitigation:* the reconciliation check, plus the rule that both sides move in one step.
 - **Inline ids change rendered task text.** Cosmetic, and probe-gated (decision 5).
 - **Graph-plan edge rules are not fully documented.** Notably, edges may not reverse a `parent_key` relationship. *Mitigation:* probe before writing instructions around it, and keep the plan's structure simple — a parent epic plus ordered siblings.

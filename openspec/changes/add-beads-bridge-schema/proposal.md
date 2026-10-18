@@ -14,6 +14,7 @@ The two tools divide cleanly: OpenSpec owns intent and contract — reviewed, gi
 - Makes apply execute against that graph: draw from the ready frontier, claim atomically, close the bead and mark the task.
 - Defines what happens when a spec is added, modified, removed, or renamed partway through implementation, on both the artifact and graph sides.
 - Uses the graph as the evidence verification reports on and archiving gates on — including waiting for a merged PR or green CI rather than a timestamp.
+- Adds a conformance harness that checks the plan a schema produces against the schema's own rules, and an executable scenario set for the parts of the bridge that are prose rather than commands. Without it, any change to instruction text is trusted rather than checked.
 - Packages the schema as a self-contained, copyable, validated folder with an agent-facing install prompt.
 - Explicitly not changed: the built-in `spec-driven` schema, any existing skill or command, and Beads itself.
 
@@ -26,6 +27,7 @@ The two tools divide cleanly: OpenSpec owns intent and contract — reviewed, gi
 - `beads-plan-materialization`: turning a change's tasks into one Beads dependency graph, atomically and idempotently.
 - `spec-change-reconciliation`: keeping specs, tasks, and the Beads graph coherent when the spec changes during implementation.
 - `beads-evidence`: using the Beads work graph as the evidence that verification reports and archiving gates on.
+- `schema-conformance-testing`: verifying a schema beyond structural validity, through automated conformance checks and executed scenarios.
 - `custom-schema-packaging`: packaging schemas as self-contained, copyable, validated folders with agent-facing install instructions.
 
 ### Modified Capabilities
@@ -34,8 +36,8 @@ None. No existing capability's requirements change, because no capability exists
 
 ## Impact
 
-New files: `openspec/schemas/beads-bridge/`, plus root `README.md`, `CONTRIBUTING.md`, and `LICENSE`.
+New files: `openspec/schemas/beads-bridge/`, `tests/`, plus root `README.md`, `CONTRIBUTING.md`, and `LICENSE`.
 
-Depends on OpenSpec's project-schema mechanism (verified against 1.14.3) and the Beads CLI (verified against 1.3.1), specifically `bd create --graph`, `bd ready`, `bd update --claim`, `bd close`, `bd dep`, and gates.
+Depends on OpenSpec's project-schema mechanism (verified against 1.14.3) and the Beads CLI (verified against 1.3.1), specifically `bd create --graph`, `bd ready`, `bd update --claim`, `bd close`, `bd dep`, and gates. The test harness needs Node for JSON assertions and runs against a throwaway Beads database so it never touches this repository's own work graph.
 
-No changes to existing skills, commands, `openspec/config.yaml`, or the bundled `spec-driven` schema. Adopters opt in by pointing `schema:` at `beads-bridge`, or by setting it on a single change.
+No changes to existing skills, commands, `openspec/config.yaml`, or the bundled `spec-driven` schema. Adopters opt in by pointing `schema:` at `beads-bridge`, or by setting it on a single change. The harness is not part of what adopters copy — they receive only the schema folder.
