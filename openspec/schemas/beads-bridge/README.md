@@ -73,7 +73,7 @@ operations:
 
 ## Repo
 
-Part of [openspec-beads](https://github.com/gpets/openspec-beads), a collection of OpenSpec schemas. The repository also carries a conformance harness for these schemas — that harness is not part of this folder and does not travel with it.
+Part of [openspec-beads](https://github.com/petsagouris/openspec-beads), a collection of OpenSpec schemas. The repository also carries a conformance harness for these schemas — that harness is not part of this folder and does not travel with it.
 
 Validate after installing or editing:
 

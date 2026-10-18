@@ -52,10 +52,10 @@ These settle the three assumptions the design rests on. Each probes for real and
 
 ## 8. Packaging
 
-- [ ] 8.1 Write the root `README.md`: what the schema is and the problem it solves, the artifact diagram, the one-prompt agent install with its manual equivalent, activation, and an explicit limitations section covering snapshot behaviour and the harness boundary. Verified by following the documented manual steps in a scratch project and reaching a validated, activated schema
-- [ ] 8.2 Verify the manual install path in a scratch project with no agent involved, following only the shell commands in the README. Verified when it reaches a validated, activated schema, satisfying the `Installation without an agent` scenario
-- [ ] 8.3 Write `CONTRIBUTING.md` covering repo layout, the `openspec schema fork` and `openspec schema init` flows, and the required gate of `openspec schema validate` plus the conformance check. Verified when every command it documents runs as written against this repository
-- [ ] 8.4 Add the MIT `LICENSE` and reference it from the README. Verified when the licence file exists and the README names it
+- [x] 8.1 Write the root `README.md`: what the schema is and the problem it solves, the artifact diagram, the one-prompt agent install with its manual equivalent, activation, and an explicit limitations section covering snapshot behaviour and the harness boundary. Verified by following its documented manual steps in a scratch project and reaching a validated, activated schema, and by correcting the repository URL to the real account rather than the guessed one
+- [x] 8.2 Verify the manual install path in a scratch project with no agent involved, following only the shell commands in the README. Verified: a fresh project listed only `spec-driven`, the copied folder validated, `beads-bridge` then resolved as a project schema with the artifact chain `proposal → specs → design → tasks → beads`, per-change activation resolved those five artifacts, and the project default stayed `spec-driven`. The `git clone` step stands in for a local copy, since the repository has no remote yet
+- [x] 8.3 Write `CONTRIBUTING.md` covering repo layout, the `openspec schema fork` and `openspec schema init` flows, and the required gate of `openspec schema validate` plus the conformance check. Verified when every command it documents runs as written against this repository
+- [x] 8.4 Add the MIT `LICENSE` and reference it from the README. Verified when the licence file exists and the README names it
 
 ## 9. Scenario suite and cold-reader tests
 
